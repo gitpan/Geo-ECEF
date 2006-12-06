@@ -6,6 +6,8 @@ WriteMakefile(
     NAME              => 'Geo::ECEF',
     VERSION_FROM      => 'lib/Geo/ECEF.pm',
     PREREQ_PM         => {
+                          vars              => 0,
+                          strict            => 0,
                           Geo::Functions    => 0.02,
                           Geo::Ellipsoids   => 0.06,
                          },

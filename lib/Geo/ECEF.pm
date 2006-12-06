@@ -8,33 +8,36 @@ Geo::ECEF - Calculates ECEF coordinates (earth centered earth fixed) from latitu
 
   use Geo::ECEF;
   my $obj=Geo::ECEF->new(); #WGS84 is the default
-  my ($x, $y, $z)=$obj->ecef(39.197807, -77.108574, 55); #Lat (deg), Lon (deg), meters (HAE)
-  print "X: $x, Y: $y, Z: $z\n";
+  my ($x, $y, $z)=$obj->ecef(39.197807, -77.108574, 55); #Lat (deg), Lon (deg), HAE (meters)
+  print "X: $x\tY: $y\tZ: $z\n";
+  my ($lat, $lon, $hae)=$obj->geodetic($x, $y, $z); #X (meters), Y (meters), Z (meters)
+  print "Lat: $lat  \tLon: $lon \tHAE $hae\n";
+
 
 =head1 DESCRIPTION
 
-Geo::ECEF calculates the X,Y and Z coordinates in the ECEF (earth centered earth fixed) coordinate system from latitude, longitude and height information.
+Geo::ECEF provides two methods ecef and geodetic.  The ecef method calculates the X,Y and Z coordinates in the ECEF (earth centered earth fixed) coordinate system from latitude, longitude and height information.  The geodetic method calculates the latitude, longitude and height above ellipsoid from ECEF.
 
-The formulas were found at http://www.u-blox.ch.
+The formulas were found at http://www.u-blox.ch/ and http://waas.stanford.edu/~wwu/maast/maastWWW1_0.zip.
 
-This code is an object perl rewrite of a simular package by Morten Sickel, Norwegian Radiation Protection Authority
+This code is an object Perl rewrite of a similar package by Morten Sickel, Norwegian Radiation Protection Authority
 
 =cut
 
 use strict;
 use vars qw($VERSION);
 use Geo::Ellipsoids;
-use Geo::Functions qw{rad_deg};
+use Geo::Functions qw{rad_deg deg_rad};
 
-$VERSION = sprintf("%d.%02d", q{Revision: 0.03} =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q{Revision: 0.04} =~ /(\d+)\.(\d+)/);
 
 =head1 CONSTRUCTOR
 
 =head2 new
 
-The new() constructor.
+The new() constructor initializes the ellipsoid from Geo::Ellipsoids.
 
-  my $obj=Geo::ECEF->new("WGS84"); #WGS84 is default
+  my $obj=Geo::ECEF->new("WGS84"); #WGS84 is the default
 
 =cut
 
@@ -49,17 +52,25 @@ sub new {
 
 =head1 METHODS
 
+=head2 initialize
+
+Method to reset the ellipsoid after construction. (see Geo::Ellipsoids)
+
+  $obj->initialize("GRS80");
+
 =cut
 
 sub initialize {
   my $self = shift();
   my $param = shift();
-  $self->ellipsoid(Geo::Ellipsoids->new($param));
+  $self->{'ellipsoid'}=Geo::Ellipsoids->new($param);
 }
 
 =head2 ecef
 
 Method returns X (meters), Y (meters), Z (meters) from lat (degrees), lon (degrees), HAE (meters).
+
+  my ($x, $y, $z)=$obj->ecef(39.197807, -77.108574, 55);
 
 =cut
 
@@ -68,17 +79,65 @@ sub ecef {
   my $lat=rad_deg(shift()||0);
   my $lon=rad_deg(shift()||0);
   my $hae=shift()||0;
-  my $e=$self->ellipsoid;
-  my $N=$self->_N($lat);
-  my $x=($N+$hae)*cos($lat)*cos($lon);
-  my $y=($N+$hae)*cos($lat)*sin($lon);
-  my $z=((( $e->b**2 / $e->a**2 * $N)+$hae)*sin($lat));
+  my $ellipsoid=$self->ellipsoid;
+  my $n=$self->n($lat);
+  my $x=($n+$hae)*cos($lat)*cos($lon);
+  my $y=($n+$hae)*cos($lat)*sin($lon);
+  my $z=((( $ellipsoid->b**2 / $ellipsoid->a**2 * $n)+$hae)*sin($lat));
   return($x, $y, $z);
+}
+
+=head2 geodetic
+
+Method returns latitude (degrees), longitude (degrees), HAE (meters) from X (meters), Y (meters), Z (meters).
+
+  my ($lat, $lon, $hae)=$obj->geodetic($x, $y, $z);
+
+Portions of this method maybe 
+
+ *************************************************************************
+ *     Copyright c 2001 The board of trustees of the Leland Stanford     *
+ *                      Junior University. All rights reserved.          *
+ *     This script file may be distributed and used freely, provided     *
+ *     this copyright notice is always kept with it.                     *
+ *                                                                       *
+ *     Questions and comments should be directed to Todd Walter at:      *
+ *     twalter@stanford.edu                                              *
+ *************************************************************************
+
+=cut
+
+sub geodetic {
+  my $self = shift();
+  my $x=shift()||0;
+  my $y=shift()||0;
+  my $z=shift()||0;
+  my $ellipsoid=$self->ellipsoid;
+  my $e2=$ellipsoid->e2;
+  my $p=sqrt($x**2 + $y**2);
+  my $lon=atan2($y,$x);
+  my $lat=atan2($z/$p, 0.01);
+  my $n=$self->n($lat);
+  my $hae=$p/cos($lat) - $n;
+  my $old_hae=-1e-9;
+  my $num=$z/$p;
+  while (abs($hae-$old_hae) > 1e-4) {
+    $old_hae=$hae;
+    my $den=1 - $e2 * $n /($n + $hae);
+    $lat=atan2($num, $den);
+    $n=$self->n($lat);
+    $hae=$p/cos($lat)-$n;
+  }
+  $lat=deg_rad($lat);
+  $lon=deg_rad($lon);
+  return($lat, $lon, $hae);
 }
 
 =head2 ellipsoid
 
-Method to set or retrieve the current ellipsoid object.
+Method to retrieve the current ellipsoid object.
+
+  my $ellipsoid=$obj->ellipsoid;
 
 =cut
 
@@ -88,11 +147,11 @@ sub ellipsoid {
   return $self->{'ellipsoid'};
 }
 
-sub _N {
+sub n {
   my $self=shift();
   my $radians=shift();
-  my $e=$self->ellipsoid;
-  return $e->a / sqrt(1-(($e->e2)*(sin($radians)**2)));
+  my $ellipsoid=$self->ellipsoid;
+  return $ellipsoid->a / sqrt(1 - $ellipsoid->e2*(sin($radians)**2));
 }
 
 1;
@@ -101,8 +160,6 @@ __END__
 
 =head1 TODO
 
-Write functions that convert from ECEF to lla
-
 =head1 BUGS
 
 =head1 LIMITS
@@ -110,16 +167,19 @@ Write functions that convert from ECEF to lla
 =head1 AUTHORS
 
 Michael R. Davis qw/perl michaelrdavis com/
+
 Morten Sickel http://sickel.net/
 
 =head1 LICENSE
 
 Copyright (c) 2006 Michael R. Davis (mrdvt92)
+
 Copyright (c) 2005 Morten Sickel (sickel.net)
 
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
 geo::ecef
+Astro::Coord::ECI
+http://www.ngs.noaa.gov/cgi-bin/xyz_getxyz.prl

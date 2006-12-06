@@ -1,3 +1,5 @@
+0.04 2006-12-05 - Michael R. Davis MRDVT (mrdvt92)
+  * add geodetic method
 0.03 2006-12-05 - Michael R. Davis MRDVT (mrdvt92)
   * renamed to Geo::ECEF
   * converted to OO perl
