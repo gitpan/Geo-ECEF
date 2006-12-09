@@ -8,8 +8,8 @@ WriteMakefile(
     PREREQ_PM         => {
                           vars              => 0,
                           strict            => 0,
-                          Geo::Functions    => 0.02,
-                          Geo::Ellipsoids   => 0.06,
+                          Geo::Functions    => 0.03,
+                          Geo::Ellipsoids   => 0.09,
                          },
     ($] >= 5.005 ? 
       (ABSTRACT_FROM  => 'lib/Geo/ECEF.pm',

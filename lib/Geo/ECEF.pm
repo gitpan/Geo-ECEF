@@ -29,7 +29,7 @@ use vars qw($VERSION);
 use Geo::Ellipsoids;
 use Geo::Functions qw{rad_deg deg_rad};
 
-$VERSION = sprintf("%d.%02d", q{Revision: 0.04} =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q{Revision: 0.05} =~ /(\d+)\.(\d+)/);
 
 =head1 CONSTRUCTOR
 
@@ -76,11 +76,27 @@ Method returns X (meters), Y (meters), Z (meters) from lat (degrees), lon (degre
 
 sub ecef {
   my $self = shift();
-  my $lat=rad_deg(shift()||0);
-  my $lon=rad_deg(shift()||0);
+  my $lat_rad=rad_deg(shift()||0);
+  my $lon_rad=rad_deg(shift()||0);
+  my $hae=shift()||0;
+  return $self->ecef_rad($lat_rad, $lon_rad, $hae);
+}
+
+=head2 ecef_rad
+
+Method returns X (meters), Y (meters), Z (meters) from lat (radians), lon (radians), HAE (meters).
+
+  my ($x, $y, $z)=$obj->ecef(0.678, -0.234, 55);
+
+=cut
+
+sub ecef_rad {
+  my $self = shift();
+  my $lat=shift()||0;
+  my $lon=shift()||0;
   my $hae=shift()||0;
   my $ellipsoid=$self->ellipsoid;
-  my $n=$self->n($lat);
+  my $n=$ellipsoid->n_rad($lat);
   my $x=($n+$hae)*cos($lat)*cos($lon);
   my $y=($n+$hae)*cos($lat)*sin($lon);
   my $z=((( $ellipsoid->b**2 / $ellipsoid->a**2 * $n)+$hae)*sin($lat));
@@ -117,7 +133,7 @@ sub geodetic {
   my $p=sqrt($x**2 + $y**2);
   my $lon=atan2($y,$x);
   my $lat=atan2($z/$p, 0.01);
-  my $n=$self->n($lat);
+  my $n=$ellipsoid->n_rad($lat);
   my $hae=$p/cos($lat) - $n;
   my $old_hae=-1e-9;
   my $num=$z/$p;
@@ -125,7 +141,7 @@ sub geodetic {
     $old_hae=$hae;
     my $den=1 - $e2 * $n /($n + $hae);
     $lat=atan2($num, $den);
-    $n=$self->n($lat);
+    $n=$ellipsoid->n_rad($lat);
     $hae=$p/cos($lat)-$n;
   }
   $lat=deg_rad($lat);
@@ -145,13 +161,6 @@ sub ellipsoid {
   my $self = shift();
   if (@_) { $self->{'ellipsoid'} = shift() }; #sets value
   return $self->{'ellipsoid'};
-}
-
-sub n {
-  my $self=shift();
-  my $radians=shift();
-  my $ellipsoid=$self->ellipsoid;
-  return $ellipsoid->a / sqrt(1 - $ellipsoid->e2*(sin($radians)**2));
 }
 
 1;

@@ -22,10 +22,18 @@ sub near {
   my $x=shift();
   my $y=shift();
   my $p=shift()||NEAR_DEFAULT;
-  if (($x-$y)/$y < 10**-$p) {
-    return 1;
+  if (abs($y) > 10**-$p) {
+    if (($x-$y)/$y < 10**-$p) {
+      return 1;
+    } else {
+      return 0;
+    }
   } else {
-    return 0;
+    if (abs($x-$y) < 10**-$p) { # if $y is near 0
+      return 1;
+    } else {
+      return 0;
+    }
   }
 }
 
@@ -49,30 +57,30 @@ my $o = Geo::ECEF->new();
 ok(ref $o, "Geo::ECEF");
 
 my ($x, $y, $z)=$o->ecef(0,0,0);
-ok($x, 6378137.000);
-ok($z, 0);
+ok(near $x, 6378137.000);
+ok(near $z, 0, 13);
 
 ($x, $y, $z)=$o->ecef(0,90,0);
-ok($z, 0);
-ok($y, 6378137.000);
+ok(near $z, 0, 13);
+ok(near $y, 6378137.000, 13);
 
 ($x, $y, $z)=$o->ecef(0,90,100);
-ok($z, 0);
-ok($y, 6378237.000);
+ok(near $z, 0, 13);
+ok(near $y, 6378237.000, 13);
 
 ($x, $y, $z)=$o->ecef(90,0,0);
-ok($z, 6356752.31424518);
-ok($y, 0);
+ok(near $z, 6356752.31424518, 13);
+ok(near $y, 0, 13);
 
 ($x, $y, $z)=$o->ecef(90,0,100);
-ok($z, 6356852.31424518);
-ok($y, 0);
+ok(near $z, 6356852.31424518, 13);
+ok(near $y, 0, 13);
 
 ($x, $y, $z)=$o->ecef(90,0,0);
-ok($y, 0);
+ok(near $y, 0, 13);
 
 ($x, $y, $z)=$o->ecef(0,0,100);
-ok($x, 6378237.000);
+ok(near $x, 6378237.000, 13);
 
 ($x, $y, $z)=$o->ecef(30.2746722,-97.7403306,0);
 ok(near $x, -742507.1);
