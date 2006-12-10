@@ -2,7 +2,6 @@ AUTHORS
 CHANGES
 INSTALL
 lib/Geo/ECEF.pm
-doc/ecef.pm.old
 Makefile.PL
 MANIFEST
 README

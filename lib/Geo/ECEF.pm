@@ -2,7 +2,7 @@ package Geo::ECEF;
 
 =head1 NAME
 
-Geo::ECEF - Calculates ECEF coordinates (earth centered earth fixed) from latitude, longitude and height above ellipsoid information
+Geo::ECEF - Converts between ECEF (earth centered earth fixed) coordinates and latitude, longitude and height above ellipsoid.
 
 =head1 SYNOPSIS
 
@@ -10,13 +10,14 @@ Geo::ECEF - Calculates ECEF coordinates (earth centered earth fixed) from latitu
   my $obj=Geo::ECEF->new(); #WGS84 is the default
   my ($x, $y, $z)=$obj->ecef(39.197807, -77.108574, 55); #Lat (deg), Lon (deg), HAE (meters)
   print "X: $x\tY: $y\tZ: $z\n";
+
   my ($lat, $lon, $hae)=$obj->geodetic($x, $y, $z); #X (meters), Y (meters), Z (meters)
   print "Lat: $lat  \tLon: $lon \tHAE $hae\n";
 
 
 =head1 DESCRIPTION
 
-Geo::ECEF provides two methods ecef and geodetic.  The ecef method calculates the X,Y and Z coordinates in the ECEF (earth centered earth fixed) coordinate system from latitude, longitude and height information.  The geodetic method calculates the latitude, longitude and height above ellipsoid from ECEF.
+Geo::ECEF provides two methods ecef and geodetic.  The ecef method calculates the X,Y and Z coordinates in the ECEF (earth centered earth fixed) coordinate system from latitude, longitude and height above the ellipsoid.  The geodetic method calculates the latitude, longitude and height above ellipsoid from ECEF coordinates.
 
 The formulas were found at http://www.u-blox.ch/ and http://waas.stanford.edu/~wwu/maast/maastWWW1_0.zip.
 
@@ -29,13 +30,13 @@ use vars qw($VERSION);
 use Geo::Ellipsoids;
 use Geo::Functions qw{rad_deg deg_rad};
 
-$VERSION = sprintf("%d.%02d", q{Revision: 0.05} =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q{Revision: 0.06} =~ /(\d+)\.(\d+)/);
 
 =head1 CONSTRUCTOR
 
 =head2 new
 
-The new() constructor initializes the ellipsoid from Geo::Ellipsoids.
+The new() constructor initializes the ellipsoid method.
 
   my $obj=Geo::ECEF->new("WGS84"); #WGS84 is the default
 
@@ -52,18 +53,34 @@ sub new {
 
 =head1 METHODS
 
-=head2 initialize
-
-Method to reset the ellipsoid after construction. (see Geo::Ellipsoids)
-
-  $obj->initialize("GRS80");
-
 =cut
 
 sub initialize {
   my $self = shift();
-  my $param = shift();
-  $self->{'ellipsoid'}=Geo::Ellipsoids->new($param);
+  my $param = shift()||undef();
+  $self->ellipsoid($param);
+}
+
+=head2 ellipsoid
+
+Method to set or retrieve the current ellipsoid object.  The ellipsoid is a Geo::Ellipsoids object.
+
+  my $ellipsoid=$obj->ellipsoid;  #Default is WGS84
+
+  $obj->ellipsoid('Clarke 1866'); #Built in ellipsoids from Geo::Ellipsoids
+  $obj->ellipsoid({a=>1});        #Custom Sphere 1 unit radius
+
+=cut
+
+sub ellipsoid {
+  my $self = shift();
+  if (@_) {
+    my $param=shift();
+    use Geo::Ellipsoids;
+    my $obj=Geo::Ellipsoids->new($param);
+    $self->{'ellipsoid'}=$obj;
+  }
+  return $self->{'ellipsoid'};
 }
 
 =head2 ecef
@@ -149,20 +166,6 @@ sub geodetic {
   return($lat, $lon, $hae);
 }
 
-=head2 ellipsoid
-
-Method to retrieve the current ellipsoid object.
-
-  my $ellipsoid=$obj->ellipsoid;
-
-=cut
-
-sub ellipsoid {
-  my $self = shift();
-  if (@_) { $self->{'ellipsoid'} = shift() }; #sets value
-  return $self->{'ellipsoid'};
-}
-
 1;
 
 __END__
@@ -170,6 +173,8 @@ __END__
 =head1 TODO
 
 =head1 BUGS
+
+Please send to the geo-perl email list.
 
 =head1 LIMITS
 

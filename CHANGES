@@ -1,3 +1,6 @@
+0.06 2006-12-08
+  * Removed geo::ecef.old from package
+  * modified ellipsoid method
 0.05 2006-12-08
   * Changed some test to "near" tests to fix reported bugs
 0.04 2006-12-05 - Michael R. Davis MRDVT (mrdvt92)
