@@ -6,7 +6,7 @@
 # Author: Michael R. Davis
 #
 
-=head1 Test Examples
+=head1 NAME
 
 base.t - Good examples concerning how to use this module
 
@@ -48,7 +48,7 @@ BEGIN {
     }
 }
 
-BEGIN { plan tests => 32 }
+BEGIN { plan tests => 43 }
 
 # just check that all modules can be compiled
 ok(eval {require Geo::ECEF; 1}, 1, $@);
@@ -113,4 +113,25 @@ ok(near $hae, 100, 6);
 ok(near $lat, 39, 10);
 ok(near $lon, -77, 10);
 ok(near $hae, 100, 6);
+
+($lat, $lon, $hae)=$o->geodetic_direct(1116523.1999, -4836193.3033, 3992379.9547);
+ok(near $lat, 39, 9);
+ok(near $lon, -77, 9);
+ok(near $hae, 100, 6);
+
+($lat, $lon, $hae)=$o->geodetic($o->ecef(90,0,0));
+ok(near $lat, 90, 10);
+ok(near $hae, 0, 10);
+
+($lat, $lon, $hae)=$o->geodetic($o->ecef(-90,0,0));
+ok(near $lat, -90, 10);
+ok(near $hae, 0, 10);
+
+($lat, $lon, $hae)=$o->geodetic_direct($o->ecef(90,0,0));
+ok(near $lat, 90, 10);
+ok(near $hae, 0, 10);
+
+($lat, $lon, $hae)=$o->geodetic_direct($o->ecef(-90,0,0));
+ok(near $lat, -90, 10);
+ok(near $hae, 0, 10);
 

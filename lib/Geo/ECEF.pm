@@ -30,7 +30,7 @@ use vars qw($VERSION);
 use Geo::Ellipsoids;
 use Geo::Functions qw{rad_deg deg_rad};
 
-$VERSION = sprintf("%d.%02d", q{Revision: 0.06} =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q{Revision: 0.07} =~ /(\d+)\.(\d+)/);
 
 =head1 CONSTRUCTOR
 
@@ -105,6 +105,8 @@ Method returns X (meters), Y (meters), Z (meters) from lat (radians), lon (radia
 
   my ($x, $y, $z)=$obj->ecef(0.678, -0.234, 55);
 
+This method may be copyright Michael Kleder, April 2006 from mathworks.com
+
 =cut
 
 sub ecef_rad {
@@ -113,20 +115,21 @@ sub ecef_rad {
   my $lon=shift()||0;
   my $hae=shift()||0;
   my $ellipsoid=$self->ellipsoid;
+  my $e2=$ellipsoid->e2;
   my $n=$ellipsoid->n_rad($lat);
-  my $x=($n+$hae)*cos($lat)*cos($lon);
-  my $y=($n+$hae)*cos($lat)*sin($lon);
-  my $z=((( $ellipsoid->b**2 / $ellipsoid->a**2 * $n)+$hae)*sin($lat));
+  my $x=($n+$hae) * cos($lat) * cos($lon);
+  my $y=($n+$hae) * cos($lat) * sin($lon);
+  my $z=((1-$e2) * $n + $hae) * sin($lat);
   return($x, $y, $z);
 }
 
 =head2 geodetic
 
-Method returns latitude (degrees), longitude (degrees), HAE (meters) from X (meters), Y (meters), Z (meters).
+Method returns latitude (degrees), longitude (degrees), HAE (meters) from X (meters), Y (meters), Z (meters).  This is an iterative calculation.
 
   my ($lat, $lon, $hae)=$obj->geodetic($x, $y, $z);
 
-Portions of this method maybe 
+Portions of this method may be...
 
  *************************************************************************
  *     Copyright c 2001 The board of trustees of the Leland Stanford     *
@@ -166,6 +169,43 @@ sub geodetic {
   return($lat, $lon, $hae);
 }
 
+=head2 geodetic_direct
+
+Method returns latitude (degrees), longitude (degrees), HAE (meters) from X (meters), Y (meters), Z (meters).  This is a direct (non-iterative) calculation from the gpsd distribution.
+
+  my ($lat, $lon, $hae)=$obj->geodetic($x, $y, $z);
+
+This method may be copyright Michael Kleder, April 2006 from mathworks.com
+
+=cut
+sub geodetic_direct {
+  my $self = shift();
+  my $x=shift()||0;
+  my $y=shift()||0;
+  my $z=shift()||0;
+
+  my $ellipsoid=$self->ellipsoid;
+  my $a = $ellipsoid->a;
+  my $b = $ellipsoid->b;
+  my $e2 = $ellipsoid->e2;
+  my $ep2 = $ellipsoid->ep2;
+  my $p = sqrt($x**2 + $y**2);
+  my $t = atan2($z*$a, $p*$b);
+  my $lon=atan2($y, $x);
+  my $lat=atan2($z + $ep2*$b*sin($t)**3, $p - $e2*$a*cos($t)**3);
+  my $n = $ellipsoid->n_rad($lat);
+  my $hae;
+  eval {
+    $hae = $p/cos($lat) - $n; #Just in case $lat is +-90 degrees
+  };
+
+  if ($@) {
+    return(deg_rad($lat), 0, abs($z)-$b);  #Is this correct?
+  } else {
+    return(deg_rad($lat), deg_rad($lon), $hae);
+  }
+}
+
 1;
 
 __END__
@@ -196,4 +236,6 @@ This library is free software; you can redistribute it and/or modify it under th
 
 geo::ecef
 Astro::Coord::ECI
+Geo::Tools
 http://www.ngs.noaa.gov/cgi-bin/xyz_getxyz.prl
+http://www.mathworks.com/matlabcentral/
