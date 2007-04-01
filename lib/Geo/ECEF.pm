@@ -30,7 +30,7 @@ use vars qw($VERSION);
 use Geo::Ellipsoids;
 use Geo::Functions qw{rad_deg deg_rad};
 
-$VERSION = sprintf("%d.%02d", q{Revision: 0.07} =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q{Revision: 0.08} =~ /(\d+)\.(\d+)/);
 
 =head1 CONSTRUCTOR
 
@@ -120,10 +120,26 @@ sub ecef_rad {
   my $x=($n+$hae) * cos($lat) * cos($lon);
   my $y=($n+$hae) * cos($lat) * sin($lon);
   my $z=((1-$e2) * $n + $hae) * sin($lat);
-  return($x, $y, $z);
+  my @array=($x, $y, $z);
+  return wantarray ? @array : \@array;
 }
 
 =head2 geodetic
+
+Calls the default geodetic method.  This user interface will not change,
+
+Method returns latitude (degrees), longitude (degrees), HAE (meters) from X (meters), Y (meters), Z (meters).
+
+  my ($lat, $lon, $hae)=$obj->geodetic($x, $y, $z);
+
+=cut
+
+sub geodetic {
+  my $self = shift();
+  return $self->geodetic_direct(@_);
+}
+
+=head2 geodetic_iterative
 
 Method returns latitude (degrees), longitude (degrees), HAE (meters) from X (meters), Y (meters), Z (meters).  This is an iterative calculation.
 
@@ -143,7 +159,7 @@ Portions of this method may be...
 
 =cut
 
-sub geodetic {
+sub geodetic_iterative {
   my $self = shift();
   my $x=shift()||0;
   my $y=shift()||0;
@@ -166,7 +182,8 @@ sub geodetic {
   }
   $lat=deg_rad($lat);
   $lon=deg_rad($lon);
-  return($lat, $lon, $hae);
+  my @array=($lat, $lon, $hae);
+  return wantarray ? @array : \@array;
 }
 
 =head2 geodetic_direct
@@ -178,6 +195,7 @@ Method returns latitude (degrees), longitude (degrees), HAE (meters) from X (met
 This method may be copyright Michael Kleder, April 2006 from mathworks.com
 
 =cut
+
 sub geodetic_direct {
   my $self = shift();
   my $x=shift()||0;
@@ -199,11 +217,13 @@ sub geodetic_direct {
     $hae = $p/cos($lat) - $n; #Just in case $lat is +-90 degrees
   };
 
+  my @array;
   if ($@) {
-    return(deg_rad($lat), 0, abs($z)-$b);  #Is this correct?
+    @array=(deg_rad($lat), 0, abs($z)-$b);  #Is this correct?
   } else {
-    return(deg_rad($lat), deg_rad($lon), $hae);
+    @array=(deg_rad($lat), deg_rad($lon), $hae);
   }
+  return wantarray ? @array : \@array;
 }
 
 1;

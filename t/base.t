@@ -48,7 +48,7 @@ BEGIN {
     }
 }
 
-BEGIN { plan tests => 43 }
+BEGIN { plan tests => 52 }
 
 # just check that all modules can be compiled
 ok(eval {require Geo::ECEF; 1}, 1, $@);
@@ -97,10 +97,20 @@ ok(near $x, -3014326.6);
 ok(near $y, 4039148.7);
 ok(near $z, 3895863);
 
+my $xyz=$o->ecef(37.89038,126.73316,23);
+ok(near $xyz->[0], -3014326.6);
+ok(near $xyz->[1], 4039148.7);
+ok(near $xyz->[2], 3895863);
+
 my ($lat, $lon, $hae)=$o->geodetic(-3014326.6, 4039148.7, 3895863);
 ok(near $lat, 37.89038);
 ok(near $lon, 126.73316);
 ok(near $hae, 23, 2);
+
+my $llh=$o->geodetic(-3014326.6, 4039148.7, 3895863);
+ok(near $llh->[0], 37.89038);
+ok(near $llh->[1], 126.73316);
+ok(near $llh->[2], 23, 2);
 
 $o->initialize('GRS80');
 #Test Data From http://www.ngs.noaa.gov/cgi-bin/xyz_getxyz.prl
@@ -118,6 +128,11 @@ ok(near $hae, 100, 6);
 ok(near $lat, 39, 9);
 ok(near $lon, -77, 9);
 ok(near $hae, 100, 6);
+
+$llh=$o->geodetic_direct(1116523.1999, -4836193.3033, 3992379.9547);
+ok(near $llh->[0], 39, 9);
+ok(near $llh->[1], -77, 9);
+ok(near $llh->[2], 100, 6);
 
 ($lat, $lon, $hae)=$o->geodetic($o->ecef(90,0,0));
 ok(near $lat, 90, 10);
