@@ -30,7 +30,7 @@ use vars qw($VERSION);
 use Geo::Ellipsoids;
 use Geo::Functions qw{rad_deg deg_rad};
 
-$VERSION = sprintf("%d.%02d", q{Revision: 0.09} =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q{Revision: 0.10} =~ /(\d+)\.(\d+)/);
 
 =head1 CONSTRUCTOR
 
@@ -246,7 +246,7 @@ Morten Sickel http://sickel.net/
 
 =head1 LICENSE
 
-Copyright (c) 2006 Michael R. Davis (mrdvt92)
+Copyright (c) 2007 Michael R. Davis (mrdvt92)
 
 Copyright (c) 2005 Morten Sickel (sickel.net)
 
@@ -254,6 +254,8 @@ This library is free software; you can redistribute it and/or modify it under th
 
 =head1 SEE ALSO
 
+Geo::Ellipsoids
+Geo::Functions
 geo::ecef
 Astro::Coord::ECI
 Geo::Tools

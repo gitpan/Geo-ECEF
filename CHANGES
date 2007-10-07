@@ -1,3 +1,5 @@
+0.10 2007-10-07
+  * removed the "use 5.008;" line in Makefile.PL
 0.09 2007-10-07
   * Absolutely nothing.  It's a perl testing thing.
 0.08 2007-04-01
