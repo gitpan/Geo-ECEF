@@ -30,7 +30,7 @@ use vars qw($VERSION);
 use Geo::Ellipsoids;
 use Geo::Functions qw{rad_deg deg_rad};
 
-$VERSION = sprintf("%d.%02d", q{Revision: 0.08} =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q{Revision: 0.09} =~ /(\d+)\.(\d+)/);
 
 =head1 CONSTRUCTOR
 

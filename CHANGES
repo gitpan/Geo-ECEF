@@ -1,3 +1,5 @@
+0.09 2007-10-07
+  * Absolutely nothing.  It's a perl testing thing.
 0.08 2007-04-01
   * Added ecef wantarray
   * Made geodetic-directic the default geodetic method.
