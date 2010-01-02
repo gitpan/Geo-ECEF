@@ -1,3 +1,5 @@
+1.10 2010-01-02
+  * Win32 Platforms cannot figure out that Geo::ECEF is not geo::ecef.
 0.10 2007-10-07
   * removed the "use 5.008;" line in Makefile.PL
 0.09 2007-10-07

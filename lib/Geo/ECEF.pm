@@ -1,4 +1,10 @@
 package Geo::ECEF;
+use strict;
+use warnings;
+use Geo::Ellipsoids;
+use Geo::Functions qw{rad_deg deg_rad};
+
+our $VERSION="1.10";
 
 =head1 NAME
 
@@ -23,15 +29,6 @@ The formulas were found at http://www.u-blox.ch/ and http://waas.stanford.edu/~w
 
 This code is an object Perl rewrite of a similar package by Morten Sickel, Norwegian Radiation Protection Authority
 
-=cut
-
-use strict;
-use vars qw($VERSION);
-use Geo::Ellipsoids;
-use Geo::Functions qw{rad_deg deg_rad};
-
-$VERSION = sprintf("%d.%02d", q{Revision: 0.10} =~ /(\d+)\.(\d+)/);
-
 =head1 CONSTRUCTOR
 
 =head2 new
@@ -52,6 +49,8 @@ sub new {
 }
 
 =head1 METHODS
+
+=head2 initialize
 
 =cut
 
@@ -226,17 +225,19 @@ sub geodetic_direct {
   return wantarray ? @array : \@array;
 }
 
-1;
-
-__END__
-
 =head1 TODO
+
+=head1 SUPPORT
+
+DavisNetworks.com supports all Perl applications big or small.
 
 =head1 BUGS
 
-Please send to the geo-perl email list.
+Please log on RT and send email to the geo-perl email list.
 
 =head1 LIMITS
+
+Win32 platforms cannot tell the difference between the deprecated L<geo::ecef> module and the current L<Geo::ECEF> module.  The way to tell is if Geo::ECEF->can("new");
 
 =head1 AUTHORS
 
@@ -246,7 +247,7 @@ Morten Sickel http://sickel.net/
 
 =head1 LICENSE
 
-Copyright (c) 2007 Michael R. Davis (mrdvt92)
+Copyright (c) 2007-2010 Michael R. Davis (mrdvt92)
 
 Copyright (c) 2005 Morten Sickel (sickel.net)
 
@@ -254,10 +255,8 @@ This library is free software; you can redistribute it and/or modify it under th
 
 =head1 SEE ALSO
 
-Geo::Ellipsoids
-Geo::Functions
-geo::ecef
-Astro::Coord::ECI
-Geo::Tools
-http://www.ngs.noaa.gov/cgi-bin/xyz_getxyz.prl
-http://www.mathworks.com/matlabcentral/
+L<Geo::Ellipsoids>, L<Geo::Functions>, L<geo::ecef>, L<Astro::Coord::ECI>, L<Geo::Tools>, http://www.ngs.noaa.gov/cgi-bin/xyz_getxyz.prl, http://www.mathworks.com/matlabcentral/
+
+=cut
+
+1;
